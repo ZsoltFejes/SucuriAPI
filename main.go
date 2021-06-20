@@ -1,3 +1,8 @@
+// Copyright 2021 The SucuriAPI AUTHORS. All rights reserved.
+//
+// Use of this source code is governed by an MIT License
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -11,6 +16,10 @@ import (
 
 	"github.com/ZsoltFejes/SucuriAPI-Go"
 )
+
+// TODO Add support to whitelist subnet
+// TODO Add Support for blacklisting path and IP
+// TODO Add Support to add/remove site
 
 type Template struct {
 	WhitelistIP   []string          `json:"whitelistIPs,omitempty"`
@@ -52,7 +61,6 @@ func main() {
 	}
 	if len(*whitelistSubnet) > 0 {
 		fmt.Println("Whitlisting subnet is not supported yet")
-		// TODO Add support to whitelist subnet
 	}
 	if len(*templatePath) > 0 {
 		template := Template{Settings: make(map[string]string)}
