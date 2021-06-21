@@ -23,7 +23,7 @@ import (
 
 type Template struct {
 	WhitelistIP   []string          `json:"whitelistIPs,omitempty"`
-	WhitelistPath []string          `json:"whitelistPaths,omitempty"`
+	WhitelistPath map[string]string `json:"whitelistPaths,omitempty"`
 	Settings      map[string]string `json:"settings,omitempty"`
 }
 
@@ -63,7 +63,7 @@ func main() {
 		fmt.Println("Whitlisting subnet is not supported yet")
 	}
 	if len(*templatePath) > 0 {
-		template := Template{Settings: make(map[string]string)}
+		template := Template{Settings: make(map[string]string), WhitelistPath: make(map[string]string)}
 		var requests []SucuriAPI.SucuriRequest
 		var wg sync.WaitGroup
 
@@ -79,8 +79,25 @@ func main() {
 			os.Exit(2)
 		}
 
-		for key, value := range template.Settings {
-			requests = append(requests, sucuri.UpdateSetting(key, value))
+		// Create sucuriRequest for all IPs to be whitelisted
+		if len(template.WhitelistIP) > 0 {
+			for _, ip := range template.WhitelistIP {
+				requests = append(requests, sucuri.WhitelistIP(ip, false))
+			}
+		}
+
+		// Create sucuriRequest for all url paths to be whitelisted
+		if len(template.WhitelistPath) > 0 {
+			for path, pattern := range template.WhitelistPath {
+				requests = append(requests, sucuri.WhitelistPath(path, pattern))
+			}
+		}
+
+		// Create sucuriRequest for each setting change
+		if len(template.Settings) > 0 {
+			for key, value := range template.Settings {
+				requests = append(requests, sucuri.UpdateSetting(key, value))
+			}
 		}
 
 		// Process all Sucuri Requests
