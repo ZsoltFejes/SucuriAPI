@@ -3,6 +3,16 @@
 // Use of this source code is governed by an MIT License
 // license that can be found in the LICENSE file.
 
+/* !!! TODO Rework how whitelist IPs and other varibles are stored before processing them.
+The call to whitelist IPs shouldn't be done twice.
+Better method is to assing the data either from the command line or config and store to a variable and process whatever is assinged to the variable
+The above eliminates to needing to change processes twice, once for standalone second for template.
+*/
+// !!! TODO Rework Whitelisting path simmilarly to whitlisting IPs
+// !!  TODO Add support to whitelist subnet
+// !!  TODO Add Support for blacklisting path and IP
+// !   TODO Add Support to add/remove site
+
 package main
 
 import (
@@ -17,16 +27,6 @@ import (
 
 	"github.com/ZsoltFejes/SucuriAPI-Go"
 )
-
-/* !!! TODO Rework how whitelist IPs and other varibles are stored before processing them.
-The call to whitelist IPs shouldn't be done twice.
-Better method is to assing the data either from the command line or config and store to a variable and process whatever is assinged to the variable
-The above eliminates to needing to change processes twice, once for standalone second for template.
-*/
-// !!! TODO Rework Whitelisting path simmilarly to whitlisting IPs
-// !!  TODO Add support to whitelist subnet
-// !!  TODO Add Support for blacklisting path and IP
-// !   TODO Add Support to add/remove site
 
 type Template struct {
 	WhitelistIP   []string          `json:"whitelistIPs,omitempty"`
