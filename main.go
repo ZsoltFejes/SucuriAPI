@@ -3,17 +3,19 @@
 // Use of this source code is governed by an MIT License
 // license that can be found in the LICENSE file.
 
-// !!  TODO Add support to whitelist subnet
+// !!! TODO Rework code breaking from fmt.Println to log.Fatalln
 // !!  TODO Add Support for blacklisting path and IP
 // !   TODO Add Support to add/remove site
 
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,10 +25,12 @@ import (
 )
 
 type Template struct {
-	WhitelistIP   []string          `json:"whitelistIPs,omitempty"`
-	BlacklistIP   []string          `json:"blacklistIPs,omitempty"`
-	WhitelistPath map[string]string `json:"whitelistPaths,omitempty"`
-	Settings      map[string]string `json:"settings,omitempty"`
+	WhitelistIP     []string          `json:"whitelistIPs,omitempty"`
+	BlacklistIP     []string          `json:"blacklistIPs,omitempty"`
+	WhitelistSubnet []string          `json:"whitelistSubnets,omitempty"`
+	BlacklistSubnet []string          `json:"blacklistSubnets,omitempty"`
+	WhitelistPath   map[string]string `json:"whitelistPaths,omitempty"`
+	Settings        map[string]string `json:"settings,omitempty"`
 }
 
 type ConfigFile struct {
@@ -58,12 +62,41 @@ func blacklistIPs(IPs []string, delete bool, sucuri *SucuriAPI.Sucuri) []SucuriA
 	return requests
 }
 
+func getUsableIPs(subnet string) []string {
+	// convert string to IPNet struct
+	_, ipv4Net, err := net.ParseCIDR(subnet)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+
+	// convert IPNet struct mask and address to uint32
+	// network is BigEndian
+	mask := binary.BigEndian.Uint32(ipv4Net.Mask)
+	start := binary.BigEndian.Uint32(ipv4Net.IP)
+
+	// find the final address
+	finish := start | (mask ^ 0xffffffff)
+	fmt.Println(finish)
+	var ips []string
+	// loop through addresses as uint32
+	for i := start; i <= finish; i++ {
+		// convert back to net.IP
+		ip := make(net.IP, 4)
+		binary.BigEndian.PutUint32(ip, i)
+		ips = append(ips, ip.String())
+	}
+	ips = ips[1 : len(ips)-1]
+	return ips
+}
+
 func main() {
 	apiKey := flag.String("key", "", "Sucuri API Key for the site")
 	apiSecret := flag.String("secret", "", "Sucuri API Secret for the site")
 	whitelistIP := flag.String("whitelistIP", "", "Whitelist IP, or multiple IPs, example 200.0.0.1 or 200.0.0.1,200.0.0.10,200.0.0.175")
 	blacklistIP := flag.String("blacklistIP", "", "Blacklist IP, or multiple IPs, example 200.0.0.1 or 200.0.0.1,200.0.0.10,200.0.0.175")
 	whitelistSubnet := flag.String("whitelistSubnet", "", "Whitelist Subnet(s), example 200.0.0.0/27 or 200.0.0.0/27,200.0.1.0/30")
+	blacklistSubnet := flag.String("blacklistSubnet", "", "Whitelist Subnet(s), example 200.0.0.0/27 or 200.0.0.0/27,200.0.1.0/30")
 	whitelistPath := flag.String("whitelistPath", "", "Whitelist URL Path, ('/home/contacts.html')")
 	whitelistPathPattern := flag.String("whitelistPathPattern", "", "Whitelist Path Pattern, can only be used with whitelistPath (matches|begins_with|ends_with|equals)")
 	delete := flag.Bool("delete", false, "Use flag to remove entries, (Settings can't be removed only whitelisted/blacklisted entries)")
@@ -144,7 +177,13 @@ func main() {
 	}
 	// Check if whitelist Subnet flag was used and store input in a local variable
 	if len(*whitelistSubnet) > 0 {
-		fmt.Println("Whitlisting subnet is not supported yet")
+		ips := getUsableIPs(*whitelistSubnet)
+		wIPs = append(wIPs, ips...)
+	}
+	// Check if whitelist Subnet flag was used and store input in a local variable
+	if len(*blacklistSubnet) > 0 {
+		ips := getUsableIPs(*blacklistSubnet)
+		bIPs = append(wIPs, ips...)
 	}
 	// Check if whitelist Path flag and pattern was used and store inputs in a local variables
 	if len(*whitelistPath) > 0 && len(*whitelistPathPattern) > 0 {
@@ -176,6 +215,20 @@ func main() {
 		// Create sucuriRequests for all url paths to be whitelisted
 		if len(template.WhitelistPath) > 0 {
 			wPaths = template.WhitelistPath
+		}
+		// Check if subnet was listed in the template file and store input in a local variable
+		if len(template.WhitelistSubnet) > 0 {
+			for _, subnet := range template.WhitelistSubnet {
+				ips := getUsableIPs(subnet)
+				wIPs = append(wIPs, ips...)
+			}
+		}
+		// Check if subnet was listed in the template file and store input in a local variable
+		if len(template.BlacklistSubnet) > 0 {
+			for _, subnet := range template.BlacklistSubnet {
+				ips := getUsableIPs(subnet)
+				bIPs = append(bIPs, ips...)
+			}
 		}
 		// TODO Implement the same local variable system as the rest of the white/blakc lists
 		// Create sucuriRequests for each setting change
