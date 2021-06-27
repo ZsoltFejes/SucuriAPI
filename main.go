@@ -3,8 +3,13 @@
 // Use of this source code is governed by an MIT License
 // license that can be found in the LICENSE file.
 
-// !!! TODO Rework code breaking from fmt.Println to log.Fatalln
-// !!  TODO Add Support for blacklisting path and IP
+// !!! TODO Add Log file support to config file
+// !!  TODO Add Support for blacklisting Path
+// !!  TODO Add support for blocking User agent
+// !!  TODO Add support to block HTTP Cookies
+// !!  TODO Add support to block HTTP referrers
+// !!  TODO Add support to add/remove Protected Pages
+// !!  TODO Add support to add/remove geo blocking
 // !   TODO Add Support to add/remove site
 
 package main
@@ -15,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -66,8 +72,7 @@ func getUsableIPs(subnet string) []string {
 	// convert string to IPNet struct
 	_, ipv4Net, err := net.ParseCIDR(subnet)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
+		log.Fatalln(err)
 	}
 
 	// convert IPNet struct mask and address to uint32
@@ -121,8 +126,7 @@ func main() {
 		file, _ := os.ReadFile(configFilePath)
 		err = json.Unmarshal(file, &configFile)
 		if err != nil {
-			fmt.Printf("Unable to parse config file, please check the content and refer to the documentation. \n%s\n\n", err)
-			os.Exit(2)
+			log.Fatalf("Unable to parse config file, please check the content and refer to the documentation. \n%s\n\n", err)
 		}
 	}
 
@@ -131,8 +135,7 @@ func main() {
 		if len(configFile.ApiKey) > 0 {
 			sucuri.ApiKey = configFile.ApiKey
 		} else {
-			fmt.Println(`API Key wasn't provided, and it was not found in config file. (use --key '<key>', or add "apiKey": "<apiKey>" to config file)`)
-			os.Exit(2)
+			log.Fatalln(`API Key wasn't provided, and it was not found in config file. (use --key '<key>', or add "apiKey": "<apiKey>" to config file)`)
 		}
 	} else {
 		sucuri.ApiKey = *apiKey
@@ -144,18 +147,15 @@ func main() {
 		if len(configFile.Sites[*site]) > 0 {
 			sucuri.ApiSecret = configFile.Sites[*site]
 		} else {
-			fmt.Printf("Site '%s' not found in config file", *site)
-			os.Exit(2)
+			log.Fatalf("Site '%s' not found in config file", *site)
 		}
 		// If apiSecret was specified but not site
 	} else if len(*apiSecret) > 0 && len(*site) == 0 {
 		sucuri.ApiSecret = *apiSecret
 	} else if len(*apiSecret) == 0 && len(*site) == 0 {
-		fmt.Println("No apiSecret or site was provided")
-		os.Exit(2)
+		log.Fatalln("No apiSecret or site was provided")
 	} else if len(*apiSecret) > 0 && len(*site) > 0 {
-		fmt.Println("Only use --secret or --site, not both")
-		os.Exit(2)
+		log.Fatalln("Only use --secret or --site, not both")
 	}
 
 	// Parse data to local variables
@@ -198,14 +198,12 @@ func main() {
 		// Open and read all data from template file
 		file, err := ioutil.ReadFile(*templatePath)
 		if err != nil {
-			fmt.Println("Template file can't be found. Check the template file if it exist or check the path to the file.")
-			os.Exit(2)
+			log.Fatalln("Template file can't be found. Check the template file if it exist or check the path to the file.")
 		}
 		// Parse template file data to template object
 		err = json.Unmarshal(file, &template)
 		if err != nil {
-			fmt.Println("Unable to parse template file, please check the content and refer to the documentation.")
-			os.Exit(2)
+			log.Fatalln("Unable to parse template file, please check the content and refer to the documentation.")
 		}
 
 		// Create sucuriRequests for all IPs to be whitelisted
