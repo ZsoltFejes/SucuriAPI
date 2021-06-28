@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // !!! TODO Add Log file support to config file
-// !!  TODO Add Support for blacklisting Path
+// !!! TODO Add Support for multiple sites when the site flag is used
 // !!  TODO Add support for blocking User agent
 // !!  TODO Add support to block HTTP Cookies
 // !!  TODO Add support to block HTTP referrers
@@ -36,6 +36,7 @@ type Template struct {
 	WhitelistSubnet []string          `json:"whitelistSubnets,omitempty"`
 	BlacklistSubnet []string          `json:"blacklistSubnets,omitempty"`
 	WhitelistPath   map[string]string `json:"whitelistPaths,omitempty"`
+	BlacklistPath   map[string]string `json:"blacklistPaths,omitempty"`
 	Settings        map[string]string `json:"settings,omitempty"`
 }
 
@@ -103,7 +104,8 @@ func main() {
 	whitelistSubnet := flag.String("whitelistSubnet", "", "Whitelist Subnet(s), example 200.0.0.0/27 or 200.0.0.0/27,200.0.1.0/30")
 	blacklistSubnet := flag.String("blacklistSubnet", "", "Whitelist Subnet(s), example 200.0.0.0/27 or 200.0.0.0/27,200.0.1.0/30")
 	whitelistPath := flag.String("whitelistPath", "", "Whitelist URL Path, ('/home/contacts.html')")
-	whitelistPathPattern := flag.String("whitelistPathPattern", "", "Whitelist Path Pattern, can only be used with whitelistPath (matches|begins_with|ends_with|equals)")
+	blacklistPath := flag.String("blacklistPath", "", "Blacklist URL Path, ('/home/contacts.html')")
+	pathPattern := flag.String("pathPattern", "", "Path Pattern, can only be used with whitelistPath and blacklistPath (matches|begins_with|ends_with|equals)")
 	delete := flag.Bool("delete", false, "Use flag to remove entries, (Settings can't be removed only whitelisted/blacklisted entries)")
 	templatePath := flag.String("template", "", "Set path to tempalte and apply all specified settings, whitelists and blacklists")
 	site := flag.String("site", "", "If you store the apiKey and sites in api.json file specify which site you want to apply changes")
@@ -186,10 +188,16 @@ func main() {
 		bIPs = append(wIPs, ips...)
 	}
 	// Check if whitelist Path flag and pattern was used and store inputs in a local variables
-	if len(*whitelistPath) > 0 && len(*whitelistPathPattern) > 0 {
-		wPaths[*whitelistPath] = *whitelistPathPattern
-	} else if len(*whitelistPath) > 0 || len(*whitelistPathPattern) > 0 {
-		fmt.Println("Use both --whitelistPath and --whitelistPathPattern")
+	if len(*whitelistPath) > 0 && len(*pathPattern) > 0 {
+		wPaths[*whitelistPath] = *pathPattern
+	} else if len(*whitelistPath) > 0 || len(*pathPattern) > 0 {
+		fmt.Println("Use both --whitelistPath and --pathPattern")
+	}
+	// Check if blacklistPath flag and pattern was used and store inputs in a local variables
+	if len(*blacklistPath) > 0 && len(*pathPattern) > 0 {
+		wPaths[*blacklistPath] = *pathPattern
+	} else if len(*blacklistPath) > 0 || len(*pathPattern) > 0 {
+		fmt.Println("Use both --blacklistPath and --pathPattern")
 	}
 	// Check if template flag was used. Obtain data from template and parse it to local variables
 	if len(*templatePath) > 0 {
