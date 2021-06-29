@@ -168,6 +168,7 @@ func main() {
 		bIPs     []string
 	)
 	wPaths := make(map[string]string)
+	bPaths := make(map[string]string)
 
 	// Check if whitelist IP flag was used and store input in a local variable
 	if len(*whitelistIP) > 0 {
@@ -195,7 +196,7 @@ func main() {
 	}
 	// Check if blacklistPath flag and pattern was used and store inputs in a local variables
 	if len(*blacklistPath) > 0 && len(*pathPattern) > 0 {
-		wPaths[*blacklistPath] = *pathPattern
+		bPaths[*blacklistPath] = *pathPattern
 	} else if len(*blacklistPath) > 0 || len(*pathPattern) > 0 {
 		fmt.Println("Use both --blacklistPath and --pathPattern")
 	}
@@ -221,6 +222,10 @@ func main() {
 		// Create sucuriRequests for all url paths to be whitelisted
 		if len(template.WhitelistPath) > 0 {
 			wPaths = template.WhitelistPath
+		}
+		// Create sucuriRequests for all url paths to be blacklisted
+		if len(template.BlacklistPath) > 0 {
+			bPaths = template.BlacklistPath
 		}
 		// Check if subnet was listed in the template file and store input in a local variable
 		if len(template.WhitelistSubnet) > 0 {
@@ -255,6 +260,11 @@ func main() {
 	if len(wPaths) > 0 {
 		for path, pattern := range wPaths {
 			requests = append(requests, sucuri.WhitelistPath(path, pattern))
+		}
+	}
+	if len(bPaths) > 0 {
+		for path, pattern := range bPaths {
+			requests = append(requests, sucuri.BlacklistPath(path, pattern))
 		}
 	}
 
