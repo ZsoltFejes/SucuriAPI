@@ -1,0 +1,28 @@
+{
+    "whitelistIPs":[
+        "109.235.147.178",
+        "109.235.151.138",
+        "109.235.149.250"
+    ],
+    "whitelistPaths":{
+        "/Framework/Analysis/XmlEditor/WebServices/XmlUpload.ashx": "match",
+        "/Framework/TreeNav/control.aspx": "match",
+        "/framework/analysis/XmlEditor/WebServices/XmlEditor.asmx/SaveXml": "match",
+        "/Framework/ResourceManagement/SkiningWizardfileupdate.aspx": "match",
+        "/framework/treenav/maintainobjectfields.aspx": "match",
+        "/framework/contentmanagement/cuteEditor.aspx": "match",
+        "/framework/contentmanagement/frmModal.aspx": "match",
+        "/framework/resourcemanagement/inlineorpopup.aspx": "match"
+    },
+    "settings": {
+        "docache": "nocacheatall",
+        "commentaccess": "restricted",
+        "detect_adv_evasion": "enabled",
+        "force_sec_headers": "enabledhstsfull",
+        "securitylevel": "high",
+        "ahttp_method": "PUT",
+        "force_https": "https",
+        "aggressive_bot_filter":"disabled",
+        "spdy_mode":"enabled"
+    }
+}

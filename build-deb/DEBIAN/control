@@ -1,5 +1,0 @@
-Package: "SucuriAPI"
-Version: "1.0"
-Architecture: "amd64"
-Maintainer: "Zsolt Fejes <zsolt.fejes@icloud.com>"
-Description: "SucuriAPI is an application that helps you submit quick setting changes from CLI to Sucuri Web Application Firewall"

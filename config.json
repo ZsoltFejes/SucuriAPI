@@ -1,0 +1,7 @@
+{
+    "apiKey": "testAPiKey",
+    "sites": {
+        "test.com": "apiSecretForSite",
+        "test2.com": "apiSecretForSite2"
+    }
+}
