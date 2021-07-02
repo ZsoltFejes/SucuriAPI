@@ -3,15 +3,6 @@
 // Use of this source code is governed by an MIT License
 // license that can be found in the LICENSE file.
 
-// !!! TODO Add Log file support to config file
-// !!! TODO Add Support for multiple sites when the site flag is used
-// !!  TODO Add support for blocking User agent
-// !!  TODO Add support to block HTTP Cookies
-// !!  TODO Add support to block HTTP referrers
-// !!  TODO Add support to add/remove Protected Pages
-// !!  TODO Add support to add/remove geo blocking
-// !   TODO Add Support to add/remove site
-
 package main
 
 import (
