@@ -45,13 +45,13 @@ type ConfigFile struct {
 	Sites  map[string]string `json:"sites,omitempty"`
 }
 
-// Submit request and notify wait group that one process have been completed
+// Submit request and notify the wait group after the request has been completed
 func submitRequest(request SucuriAPI.SucuriRequest, wg *sync.WaitGroup) {
 	request.Submit()
 	wg.Done()
 }
 
-// Whitelist a list of IP addresses, if delete is true it will remove the provided IP addresses from the whitelisted IPs
+// Whitelist a list of IP addresses, if delete is true it will remove the listed IP addresses from the whitelisted IPs
 func whitelistIPs(IPs []string, delete bool, sucuri *SucuriAPI.Sucuri) []SucuriAPI.SucuriRequest {
 	var requests []SucuriAPI.SucuriRequest
 	for _, ip := range IPs {
@@ -60,7 +60,7 @@ func whitelistIPs(IPs []string, delete bool, sucuri *SucuriAPI.Sucuri) []SucuriA
 	return requests
 }
 
-// Blacklist a list of IP addresses, if delete is true it will remove the provided IP addresses from the whitelisted IPs
+// Blacklist a list of IP addresses, if delete is true it will remove the listed IP addresses from the whitelisted IPs
 func blacklistIPs(IPs []string, delete bool, sucuri *SucuriAPI.Sucuri) []SucuriAPI.SucuriRequest {
 	var requests []SucuriAPI.SucuriRequest
 	for _, ip := range IPs {
@@ -83,7 +83,7 @@ func getUsableIPs(subnet string) []string {
 
 	// find the final address
 	finish := start | (mask ^ 0xffffffff)
-	fmt.Println(finish)
+
 	var ips []string
 	// loop through addresses as uint32
 	for i := start; i <= finish; i++ {
