@@ -103,10 +103,7 @@ func main() {
 	site := flag.String("site", "", "If you store the apiKey and sites in api.json file specify which site you want to apply changes")
 	flag.Parse()
 
-	sucuri := SucuriAPI.Sucuri{
-		Url: "https://waf.sucuri.net/api?v2",
-	}
-
+	// Print settings options and possible values
 	if *showSettingOptions {
 		// Setting Usage
 		settingsUsage := make(map[string]string)
@@ -116,7 +113,7 @@ func main() {
 		settingsUsage["play_internal_ip"] = "Un-pauses an item from the list of hosting addresses."
 		settingsUsage["securitylevel"] = "Modifies the security level. (high, paranoid)"
 		settingsUsage["adminaccess"] = "Modifies the administration access mode. (open, restricted)"
-		settingsUsage["force_sec_headers"] = "Enables or disables the HTTP security headers. (enabled, disabled)"
+		settingsUsage["force_sec_headers"] = "Enables or disables the HTTP security headers. (disabled, enabled, enabledhsts, enabledhstsfull)"
 		settingsUsage["commentaccess"] = "Enables or disables the ability to leave comments. (open, restricted)"
 		settingsUsage["unfiltered_html"] = "Enables or disables the ability HTML filters. (allow_unfilter, block_unfilter)"
 		settingsUsage["block_php_upload"] = "Enables or disables the ability to upload files. (allow_uploads, block_uploads)"
@@ -178,6 +175,10 @@ func main() {
 			fmt.Printf("%s\n%s\n", key, value)
 		}
 		os.Exit(0)
+	}
+
+	sucuri := SucuriAPI.Sucuri{
+		Url: "https://waf.sucuri.net/api?v2",
 	}
 
 	// Variables for config
