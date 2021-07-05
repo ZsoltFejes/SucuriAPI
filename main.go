@@ -98,12 +98,86 @@ func main() {
 	blacklistPath := flag.String("blacklistPath", "", "Blacklist URL Path, ('/home/contacts.html')")
 	pathPattern := flag.String("pathPattern", "", "Path Pattern, can only be used with whitelistPath and blacklistPath (matches|begins_with|ends_with|equals)")
 	delete := flag.Bool("delete", false, "Use flag to remove entries, (Settings can't be removed only whitelisted/blacklisted entries)")
+	showSettingOptions := flag.Bool("settingOptions", false, "Show Setting options")
 	templatePath := flag.String("template", "", "Set path to tempalte and apply all specified settings, whitelists and blacklists")
 	site := flag.String("site", "", "If you store the apiKey and sites in api.json file specify which site you want to apply changes")
 	flag.Parse()
 
 	sucuri := SucuriAPI.Sucuri{
 		Url: "https://waf.sucuri.net/api?v2",
+	}
+
+	if *showSettingOptions {
+		// Setting Usage
+		settingsUsage := make(map[string]string)
+		settingsUsage["new_internal_ip"] = `Adds a new item to the list of hosting addresses. You must also send the type (if alternate or backup) using a parameter named "new_internal_ip_type" and an additional flag to tell the API to process the HTTP request named "manage_internal_ip". You can add a note to the address using the parameter "hosting_ip_notes". Additional to the notes, you can also add a tag, which is a unique identifier for the region where the address is going to be used, you can do this via another parameter named "new_internal_ip_tag". (IPv4, IPv6, TLD)`
+		settingsUsage["delete_internal_ip"] = "Deletes an item from the list of hosting addresses."
+		settingsUsage["pause_internal_ip"] = "Pauses an item from the list of hosting addresses."
+		settingsUsage["play_internal_ip"] = "Un-pauses an item from the list of hosting addresses."
+		settingsUsage["securitylevel"] = "Modifies the security level. (high, paranoid)"
+		settingsUsage["adminaccess"] = "Modifies the administration access mode. (open, restricted)"
+		settingsUsage["force_sec_headers"] = "Enables or disables the HTTP security headers. (enabled, disabled)"
+		settingsUsage["commentaccess"] = "Enables or disables the ability to leave comments. (open, restricted)"
+		settingsUsage["unfiltered_html"] = "Enables or disables the ability HTML filters. (allow_unfilter, block_unfilter)"
+		settingsUsage["block_php_upload"] = "Enables or disables the ability to upload files. (allow_uploads, block_uploads)"
+		settingsUsage["detect_adv_evasion"] = "Enables or disables the detection of advanced evasion. (enabled, disabled)"
+		settingsUsage["ids_monitoring"] = "Enables or disables the intrusion detection system. (enabled, disabled)"
+		settingsUsage["aggressive_bot_filter"] = "Enables or disables aggressive filters against robots. (enabled, disabled)"
+		settingsUsage["http_flood_protection"] = "Enables or disables the HTTP flood protection. (js_filter, disabled)"
+		settingsUsage["docache"] = "Modifies the cache mode for the website. (docache, nocache, sitecache, nocacheatall)"
+		settingsUsage["compression_mode"] = "Enables or disables the data compression. (enabled, disabled)"
+		settingsUsage["failover_time"] = "Configures the time in seconds for a fail-over. (5, 10, 30, 60)"
+		settingsUsage["forwardquerystrings_mode"] = "Enables or disables the HTTP query strings forwarding. (enabled, disabled)"
+		settingsUsage["force_https"] = "Configures the HTTP protocol redirection. (http, https, null)"
+		settingsUsage["spdy_mode"] = "Enables or disables the HTTP2 support. (enabled, disabled)"
+		settingsUsage["max_upload_size"] = "Configures the maximum size for uploaded files in megabytes. (5m, 10m, 50m, 100m, 200m, 400m)"
+		settingsUsage["behind_cdn"] = "Configures the CDN being used by the website. (none, behind_akamai, behind_cloudflare, behind_maxcdn, behind_cdn)"
+		settingsUsage["block_attacker_country"] = "Denies access to the top attacker countries via GeoIP. (enabled, disabled)"
+		settingsUsage["domain_alias"] = "Adds a new item to the list of domain aliases. (TLD)"
+		settingsUsage["remove_domain_alias[]"] = "Deletes an item from the list of domain aliases. ([]TLD)"
+		settingsUsage["allowlist_dir"] = `Adds a new item to the list of allowed URLs. You must also send the pattern that will be used to match the URL, the parameter is named "allowlist_dir_pattern" and accepts these values: matches, begins_with, ends_with, equals. The API only accepts one URL and one pattern per request. (URL)`
+		settingsUsage["remove_allowlist_dir[]"] = "Deletes an item from the list of allowed URLs. ([]URL)"
+		settingsUsage["blocklist_dir"] = `Adds a new item to the list of blocked URLs. You must also send the pattern that will be used to match the URL, the parameter is named "blocklist_dir_pattern" and accepts these values: matches, begins_with, ends_with, equals. The API only accepts one URL and one pattern per request. (URL)`
+		settingsUsage["remove_blocklist_dir[]"] = "Deletes an item from the list of blocked URLs. ([]URL)"
+		settingsUsage["noncache_dir"] = `Adds a new item to the list of non-cacheable URLs. You must also send the pattern that will be used to match the URL, the parameter is named "noncache_dir_pattern" and accepts these values: matches, begins_with, ends_with, equals. The API only accepts one URL and one pattern per request. (URL)`
+		settingsUsage["remove_noncache_dir[]"] = "Deletes an item from the list of non-cacheable URLs. ([]URL)"
+		settingsUsage["block_from_viewing[]"] = `Configures the countries that will be blocked from sending a GET request to the website. Notice that this option overrides the value of the setting, this means that you can not add individual countries to the list but the complete list of countries that will be blocked. You must send another parameter named "update_geo_blocking" with any value in order to force the API to process the request. (US, CA, BR, etc)`
+		settingsUsage["block_from_posting[]"] = `Configures the countries that will be blocked from sending a POST request to the website. Notice that this option overrides the value of the setting, this means that you can not add individual countries to the list but the complete list of countries that will be blocked. You must send another parameter named "update_geo_blocking" with any value in order to force the API to process the request. (US, CA, BR, etc)`
+		settingsUsage["block_useragent"] = "Adds a new item to the list of blocked user-agents."
+		settingsUsage["remove_block_useragent[]"] = "Deletes an item from the list of blocked user-agents."
+		settingsUsage["block_referer"] = "Adds a new item to the list of blocked HTTP referers."
+		settingsUsage["remove_block_referer[]"] = "Deletes an item from the list of blocked HTTP referers."
+		settingsUsage["block_cookie"] = "Adds a new item to the list of blocked browser cookies."
+		settingsUsage["remove_block_cookie[]"] = "Deletes an item from the list of blocked browser cookies."
+		settingsUsage["ahttp_method"] = "Adds a new item to the list of allowed HTTP methods."
+		settingsUsage["remove_ahttp_method[]"] = "Deletes an item from the list of allowed HTTP methods."
+		settingsUsage["twofactorauth_path"] = `Adds a new item to the list of protected pages via 2Factor-Auth. You must also specify which protection will be applied to the page, the parameter is named "twofactorauth_type" and accepts these values: password, googleauth, captcha, ip. If you choose to protect the URL with "IP" the firewall will expect that the address is among the allowed IP addresses. The API only accepts one URL and one pattern per request. (URL)`
+		settingsUsage["item_twofactorauth_path"] = `Deletes an item from the list of protected pages. If you also include the parameter "twofactorauth_update_pwd" in the request, the API will not delete the URLs from the list, but instead will re-generate the keys. This applies to the URLs protected by a password or by Google Auth. ([]URL)`
+		settingsUsage["origin_protocol_port"] = "Configures the port number for the connection. (80, 443)"
+		offset := 7
+		valueLength := 0
+		for key, value := range settingsUsage {
+			valueArray := strings.Split(value, " ")
+			var formatedList []string
+			valueLength = 0
+			for index, value := range valueArray {
+				valueLength += len(value) + 1
+				if index < len(valueArray)-1 {
+					if index == 0 {
+						formatedList = append(formatedList, strings.Repeat(" ", offset))
+						valueLength = len(value) + 1
+					}
+					if valueLength+len(valueArray[index+1])+offset+1 >= 80 {
+						formatedList = append(formatedList, "\n"+strings.Repeat(" ", offset))
+						valueLength = len(value) + 1
+					}
+				}
+				formatedList = append(formatedList, value)
+			}
+			value = strings.Join(formatedList, " ")
+			fmt.Printf("%s\n%s\n", key, value)
+		}
+		os.Exit(0)
 	}
 
 	// Variables for config
