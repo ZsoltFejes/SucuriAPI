@@ -99,6 +99,8 @@ func main() {
 	pathPattern := flag.String("pathPattern", "", "Path Pattern, can only be used with whitelistPath and blacklistPath (matches|begins_with|ends_with|equals)")
 	delete := flag.Bool("delete", false, "Use flag to remove entries, (Settings can't be removed only whitelisted/blacklisted entries)")
 	showSettingOptions := flag.Bool("settingOptions", false, "Show Setting options")
+	setting := flag.String("setting", "", "Change a setting, you can find setting names by running SucuriAPI --settingOptions")
+	settingVal := flag.String("settingVal", "", "Setting Value used with --setting. To see possible values for a setting run SucuriAPI --settingOptions and see the values listed between parentheses")
 	templatePath := flag.String("template", "", "Set path to tempalte and apply all specified settings, whitelists and blacklists")
 	site := flag.String("site", "", "If you store the apiKey and sites in api.json file specify which site you want to apply changes")
 	flag.Parse()
@@ -108,9 +110,9 @@ func main() {
 		// Setting Usage
 		settingsUsage := make(map[string]string)
 		settingsUsage["new_internal_ip"] = `Adds a new item to the list of hosting addresses. You must also send the type (if alternate or backup) using a parameter named "new_internal_ip_type" and an additional flag to tell the API to process the HTTP request named "manage_internal_ip". You can add a note to the address using the parameter "hosting_ip_notes". Additional to the notes, you can also add a tag, which is a unique identifier for the region where the address is going to be used, you can do this via another parameter named "new_internal_ip_tag". (IPv4, IPv6, TLD)`
-		settingsUsage["delete_internal_ip"] = "Deletes an item from the list of hosting addresses."
-		settingsUsage["pause_internal_ip"] = "Pauses an item from the list of hosting addresses."
-		settingsUsage["play_internal_ip"] = "Un-pauses an item from the list of hosting addresses."
+		settingsUsage["delete_internal_ip"] = "Deletes an item from the list of hosting addresses. (IPv4, IPv6, TLD)"
+		settingsUsage["pause_internal_ip"] = "Pauses an item from the list of hosting addresses. (IPv4, IPv6, TLD)"
+		settingsUsage["play_internal_ip"] = "Un-pauses an item from the list of hosting addresses. (IPv4, IPv6, TLD)"
 		settingsUsage["securitylevel"] = "Modifies the security level. (high, paranoid)"
 		settingsUsage["adminaccess"] = "Modifies the administration access mode. (open, restricted)"
 		settingsUsage["force_sec_headers"] = "Enables or disables the HTTP security headers. (disabled, enabled, enabledhsts, enabledhstsfull)"
@@ -134,14 +136,14 @@ func main() {
 		settingsUsage["remove_domain_alias[]"] = "Deletes an item from the list of domain aliases. ([]TLD)"
 		settingsUsage["block_from_viewing[]"] = `Configures the countries that will be blocked from sending a GET request to the website. Notice that this option overrides the value of the setting, this means that you can not add individual countries to the list but the complete list of countries that will be blocked. You must send another parameter named "update_geo_blocking" with any value in order to force the API to process the request. (US, CA, BR, etc)`
 		settingsUsage["block_from_posting[]"] = `Configures the countries that will be blocked from sending a POST request to the website. Notice that this option overrides the value of the setting, this means that you can not add individual countries to the list but the complete list of countries that will be blocked. You must send another parameter named "update_geo_blocking" with any value in order to force the API to process the request. (US, CA, BR, etc)`
-		settingsUsage["block_useragent"] = "Adds a new item to the list of blocked user-agents."
-		settingsUsage["remove_block_useragent[]"] = "Deletes an item from the list of blocked user-agents."
-		settingsUsage["block_referer"] = "Adds a new item to the list of blocked HTTP referers."
-		settingsUsage["remove_block_referer[]"] = "Deletes an item from the list of blocked HTTP referers."
-		settingsUsage["block_cookie"] = "Adds a new item to the list of blocked browser cookies."
-		settingsUsage["remove_block_cookie[]"] = "Deletes an item from the list of blocked browser cookies."
-		settingsUsage["ahttp_method"] = "Adds a new item to the list of allowed HTTP methods."
-		settingsUsage["remove_ahttp_method[]"] = "Deletes an item from the list of allowed HTTP methods."
+		settingsUsage["block_useragent"] = "Adds a new item to the list of blocked user-agents. (user agent)"
+		settingsUsage["remove_block_useragent[]"] = "Deletes an item from the list of blocked user-agents. (user agent)"
+		settingsUsage["block_referer"] = "Adds a new item to the list of blocked HTTP referers. (URL)"
+		settingsUsage["remove_block_referer[]"] = "Deletes an item from the list of blocked HTTP referers. (URL)"
+		settingsUsage["block_cookie"] = "Adds a new item to the list of blocked browser cookies. (name of cookie)"
+		settingsUsage["remove_block_cookie[]"] = "Deletes an item from the list of blocked browser cookies. (name of cookie)"
+		settingsUsage["ahttp_method"] = "Adds a new item to the list of allowed HTTP methods. (HTTP Method)"
+		settingsUsage["remove_ahttp_method[]"] = "Deletes an item from the list of allowed HTTP methods. (HTTP Method)"
 		settingsUsage["twofactorauth_path"] = `Adds a new item to the list of protected pages via 2Factor-Auth. You must also specify which protection will be applied to the page, the parameter is named "twofactorauth_type" and accepts these values: password, googleauth, captcha, ip. If you choose to protect the URL with "IP" the firewall will expect that the address is among the allowed IP addresses. The API only accepts one URL and one pattern per request. (URL)`
 		settingsUsage["item_twofactorauth_path"] = `Deletes an item from the list of protected pages. If you also include the parameter "twofactorauth_update_pwd" in the request, the API will not delete the URLs from the list, but instead will re-generate the keys. This applies to the URLs protected by a password or by Google Auth. ([]URL)`
 		settingsUsage["origin_protocol_port"] = "Configures the port number for the connection. (80, 443)"
@@ -219,7 +221,6 @@ func main() {
 	} else if len(*apiSecret) > 0 && len(*site) > 0 {
 		log.Fatalln("Only use --secret or --site, not both")
 	}
-
 	// Parse data to local variables
 	var (
 		requests []SucuriAPI.SucuriRequest
@@ -229,6 +230,7 @@ func main() {
 	)
 	wPaths := make(map[string]string)
 	bPaths := make(map[string]string)
+	settings := make(map[string]string)
 
 	// Check if whitelist IP flag was used and store input in a local variable
 	if len(*whitelistIP) > 0 {
@@ -260,6 +262,13 @@ func main() {
 	} else if len(*blacklistPath) > 0 || len(*pathPattern) > 0 {
 		fmt.Println("Use both --blacklistPath and --pathPattern")
 	}
+	// Check if setting and settingVal was used
+	if len(*setting) > 0 && len(*settingVal) > 0 {
+		settings[*setting] = *settingVal
+	} else if len(*setting) > 0 && len(*settingVal) == 0 {
+		fmt.Println("You have not specified --settingVal, in order to change a setting please provide the new value. If you are unsure of the possible values run SucuriAPI --settingOptions, or check the documentation.")
+	}
+
 	// Check if template flag was used. Obtain data from template and parse it to local variables
 	if len(*templatePath) > 0 {
 		template := Template{Settings: make(map[string]string), WhitelistPath: make(map[string]string)}
@@ -301,11 +310,10 @@ func main() {
 				bIPs = append(bIPs, ips...)
 			}
 		}
-		// TODO Implement the same local variable system as the rest of the white/blakc lists
 		// Create sucuriRequests for each setting change
 		if len(template.Settings) > 0 {
 			for key, value := range template.Settings {
-				requests = append(requests, sucuri.UpdateSetting(key, value))
+				settings[key] = value
 			}
 		}
 	}
@@ -325,6 +333,11 @@ func main() {
 	if len(bPaths) > 0 {
 		for path, pattern := range bPaths {
 			requests = append(requests, sucuri.BlacklistPath(path, pattern))
+		}
+	}
+	if len(settings) > 0 {
+		for key, value := range settings {
+			requests = append(requests, sucuri.UpdateSetting(key, value))
 		}
 	}
 
