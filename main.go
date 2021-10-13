@@ -253,13 +253,13 @@ func main() {
 	// Check if whitelist Path flag and pattern was used and store inputs in a local variables
 	if len(*whitelistPath) > 0 && len(*pathPattern) > 0 {
 		wPaths[*whitelistPath] = *pathPattern
-	} else if len(*whitelistPath) > 0 || len(*pathPattern) > 0 {
+	} else if len(*whitelistPath) > 0 && len(*pathPattern) == 0 {
 		fmt.Println("Use both --whitelistPath and --pathPattern")
 	}
 	// Check if blacklistPath flag and pattern was used and store inputs in a local variables
 	if len(*blacklistPath) > 0 && len(*pathPattern) > 0 {
 		bPaths[*blacklistPath] = *pathPattern
-	} else if len(*blacklistPath) > 0 || len(*pathPattern) > 0 {
+	} else if len(*blacklistPath) > 0 && len(*pathPattern) == 0 {
 		fmt.Println("Use both --blacklistPath and --pathPattern")
 	}
 	// Check if setting and settingVal was used
