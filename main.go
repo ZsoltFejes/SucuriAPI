@@ -248,7 +248,7 @@ func main() {
 	// Check if whitelist Subnet flag was used and store input in a local variable
 	if len(*blacklistSubnet) > 0 {
 		ips := getUsableIPs(*blacklistSubnet)
-		bIPs = append(wIPs, ips...)
+		bIPs = append(bIPs, ips...)
 	}
 	// Check if whitelist Path flag and pattern was used and store inputs in a local variables
 	if len(*whitelistPath) > 0 && len(*pathPattern) > 0 {
