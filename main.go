@@ -34,6 +34,7 @@ type Template struct {
 type ConfigFile struct {
 	ApiKey string            `json:"apiKey,omitempty"`
 	Sites  map[string]string `json:"sites,omitempty"`
+	ConcurrentRequests int `json:"concurrentRequests,omitempty"`
 }
 
 // Submit request and notify the wait group after the request has been completed
@@ -342,9 +343,18 @@ func main() {
 	}
 
 	// Process all Sucuri Requests
+	var num_requests = 0
 	for _, request := range requests {
 		wg.Add(1)
-		go submitRequest(request, &wg)
+		if configFile.ConcurrentRequests > 0 {
+			num_requests++
+			go submitRequest(request, &wg)
+			if configFile.ConcurrentRequests == num_requests {
+				wg.Wait()
+				num_requests = 0
+			}
+		} else {
+			submitRequest(request, &wg)
+		}
 	}
-	wg.Wait()
 }
